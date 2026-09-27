@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wspólne Zajęcia - Wyszukiwarka</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Prosty scrollbar dla estetyki */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; rounded-lg; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Nagłówek -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">Znajdź wspólne zajęcia</h1>
+            <p class="text-slate-600">Wyszukaj osobę, aby zobaczyć z kim dzieli grupy zajęciowe w semestrze 3.</p>
+        </header>
+
+        <!-- Wyszukiwarka z Autocomplete -->
+        <div class="relative max-w-lg mx-auto mb-10" id="searchContainer">
+            <div class="relative">
+                <input type="text" id="searchInput" 
+                    class="w-full p-4 pl-12 pr-4 rounded-xl border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-lg"
+                    placeholder="Wpisz imię lub nazwisko..." autocomplete="off">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Lista podpowiedzi -->
+            <ul id="suggestionsList" class="absolute z-10 w-full bg-white border border-slate-200 rounded-xl mt-2 shadow-xl hidden max-h-72 overflow-y-auto divide-y divide-slate-100">
+                <!-- Elementy listy dodawane przez JS -->
+            </ul>
+        </div>
+
+        <!-- Kontener na wyniki -->
+        <div id="resultsContainer" class="hidden animate-fade-in-up">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-blue-600 text-white p-6">
+                    <h2 class="text-2xl font-semibold" id="selectedStudentName">Wybrana osoba</h2>
+                    <p class="text-blue-100 mt-1">Lista osób, z którymi dzielisz najwięcej zajęć.</p>
+                </div>
+                
+                <div class="p-0">
+                    <ul id="sharedClassesList" class="divide-y divide-slate-200">
+                        <!-- Wyniki generowane przez JS -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dane pobrane z pliku PLAN-SEM-3.xlsx
+        const studentsData = [
+  {
+    "id": "432544",
+    "name": "Patryk Antosiak",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "434046",
+    "name": "Jakub Bagienko",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "430469",
+    "name": "Bartosz Bielawski",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "433596",
+    "name": "Natalie Bochenski",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "433970",
+    "name": "Mateusz Bożek",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "430528",
+    "name": "Hubert Czajkowski",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "431130",
+    "name": "Jakub Czupryna",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "430598",
+    "name": "Bartosz Czyszczoń",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "431727",
+    "name": "Kamil Deptalski",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432536",
+    "name": "Wit Dzikowski",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "426068",
+    "name": "Daniel Florek",
+    "groups": {
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "429981",
+    "name": "Kamil Gawęda",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "432753",
+    "name": "Bartosz Gąsior",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "426506",
+    "name": "Nieznany (426506)",
+    "groups": {
+      "Sygnały i systemy (WC)": "2"
+    }
+  },
+  {
+    "id": "431683",
+    "name": "Piotr Gontarz",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431694",
+    "name": "Mateusz Górka",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "431536",
+    "name": "Małgorzata Grzesik",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431614",
+    "name": "Wiktor Gucwa",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "430667",
+    "name": "Jakub Gut",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431665",
+    "name": "Beniamin Hager",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "430209",
+    "name": "Natalia Hamerlik",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "431316",
+    "name": "Mateusz Janas",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431334",
+    "name": "Karol Kantor",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "434326",
+    "name": "Miłosz Karny",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "431174",
+    "name": "Wiktor Kasprzak",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "429892",
+    "name": "Miłosz Klasa",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "429983",
+    "name": "Andrzej Klimek",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "433032",
+    "name": "Jakub Kłucjasz",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "432551",
+    "name": "Szymon Konik",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "430193",
+    "name": "Martyna Kot",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "434327",
+    "name": "Piotr Kowalczyk",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431195",
+    "name": "Magdalena Kowalska",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "434816",
+    "name": "Maksymilian Kowalski",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "432958",
+    "name": "Paweł Kulik",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "434325",
+    "name": "Bartłomiej Kupiec",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "433602",
+    "name": "Kamil Kwiatkowski",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "432547",
+    "name": "Michał Lewiński",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "430732",
+    "name": "Karol Machnik",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432543",
+    "name": "Szymon Maciaszek",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431592",
+    "name": "Krzysztof Marchewka",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432993",
+    "name": "Aleksandra Matus",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "433600",
+    "name": "Aleksandra Mierzejewska",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432646",
+    "name": "Piotr Misiaszek",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "431125",
+    "name": "Wojciech Młynarczyk",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "424804",
+    "name": "Szymon Mordziński",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431178",
+    "name": "Krzysztof Mrowiec",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "431779",
+    "name": "Kacper Mrzygłód",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "433008",
+    "name": "Bartosz Myśliwiec",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "434640",
+    "name": "Aleksander Nowakowski",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "429976",
+    "name": "Bartosz Noworyta",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "426405",
+    "name": "Katarzyna Ogiela",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "431477",
+    "name": "Przemysław Pakuła",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "430731",
+    "name": "Kamil Pałka",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "434324",
+    "name": "Milena Plebankiewicz",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "431212",
+    "name": "Bartosz Pomykała",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "430499",
+    "name": "Weronika Rozpondek",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "431351",
+    "name": "Jan Ryszka",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432740",
+    "name": "Konrad Rzemieniec",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432546",
+    "name": "Grzegorz Scencelewicz",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "431474",
+    "name": "Bartosz Skowroński",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "425454",
+    "name": "Filip Słowik",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "433599",
+    "name": "Amelia Smosna",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "432545",
+    "name": "Zbigniew Staśko",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "6",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "430202",
+    "name": "Gracjan Stawarczyk",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "430024",
+    "name": "Julia Stępak",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "4",
+      "Programowanie obiektowe (WL)": "3",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "433597",
+    "name": "Mateusz Stokowiec",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "2",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "430872",
+    "name": "Mateusz Szymkiewicz",
+    "groups": {
+      "Metody numeryczne (WL)": "5",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "430785",
+    "name": "Hubert Śliwa",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "5",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "433598",
+    "name": "Cristian Święs",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "2",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "434576",
+    "name": "Piotr Trybała",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "432549",
+    "name": "Wojciech Trzyna",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "5",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "3",
+      "Bazy danych (P)": "1"
+    }
+  },
+  {
+    "id": "433423",
+    "name": "Karolina Waga",
+    "groups": {
+      "Metody numeryczne (WL)": "1",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "1",
+      "Programowanie obiektowe (WL)": "5",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "430105",
+    "name": "Aleksandra Węgrzyn",
+    "groups": {
+      "Metody numeryczne (WL)": "2",
+      "Metody numeryczne (P)": "1",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "2",
+      "Sieci IP (WL)": "4",
+      "Sygnały i systemy (WC)": "3",
+      "Bazy danych (WL)": "5",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432548",
+    "name": "Wiktor Witkowski",
+    "groups": {
+      "Metody numeryczne (WL)": "3",
+      "Metody numeryczne (P)": "3",
+      "Podstawy elektroniki (WL)": "3",
+      "Programowanie obiektowe (WL)": "1",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "1",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "1",
+      "Bazy danych (P)": "2"
+    }
+  },
+  {
+    "id": "430865",
+    "name": "Michał Wnęk",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "432539",
+    "name": "Michał Zieliński",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "4",
+      "Programowanie obiektowe (P )": "1",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "1",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "3"
+    }
+  },
+  {
+    "id": "426964",
+    "name": "Nieznany (426964)",
+    "groups": {
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "3"
+    }
+  },
+  {
+    "id": "432795",
+    "name": "Nieznany (432795)",
+    "groups": {
+      "Metody numeryczne (WL)": "4",
+      "Metody numeryczne (P)": "2",
+      "Podstawy elektroniki (WL)": "2",
+      "Programowanie obiektowe (WL)": "2",
+      "Programowanie obiektowe (P )": "3",
+      "Sieci IP (WL)": "3",
+      "Sygnały i systemy (WC)": "2",
+      "Bazy danych (WL)": "4",
+      "Bazy danych (P)": "1"
+    }
+  }
+];
+
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const selectedStudentName = document.getElementById('selectedStudentName');
+        const sharedClassesList = document.getElementById('sharedClassesList');
+
+        // Obsługa wpisywania w wyszukiwarkę
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            suggestionsList.innerHTML = '';
+            
+            if (query.length === 0) {
+                suggestionsList.classList.add('hidden');
+                return;
+            }
+
+            const matches = studentsData.filter(student => 
+                student.name.toLowerCase().includes(query)
+            );
+
+            if (matches.length > 0) {
+                suggestionsList.classList.remove('hidden');
+                matches.forEach(student => {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-3 hover:bg-blue-50 cursor-pointer text-slate-700 transition-colors duration-150';
+                    li.textContent = student.name;
+                    
+                    li.addEventListener('click', () => {
+                        searchInput.value = student.name;
+                        suggestionsList.classList.add('hidden');
+                        showSharedClasses(student);
+                    });
+                    
+                    suggestionsList.appendChild(li);
+                });
+            } else {
+                suggestionsList.classList.add('hidden');
+            }
+        });
+
+        // Ukryj podpowiedzi po kliknięciu poza wyszukiwarką
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('searchContainer').contains(e.target)) {
+                suggestionsList.classList.add('hidden');
+            }
+        });
+
+        // Funkcja obliczająca i wyświetlająca wspólne zajęcia
+        function showSharedClasses(selectedStudent) {
+            let sharedData = [];
+
+            studentsData.forEach(otherStudent => {
+                if (otherStudent.id === selectedStudent.id) return;
+
+                let sharedSubjects = [];
+                for (const [subject, group] of Object.entries(selectedStudent.groups)) {
+                    if (otherStudent.groups[subject] && otherStudent.groups[subject] === group) {
+                        sharedSubjects.push(`${subject} (Gr. ${group})`);
+                    }
+                }
+
+                if (sharedSubjects.length > 0) {
+                    sharedData.push({
+                        name: otherStudent.name,
+                        count: sharedSubjects.length,
+                        subjects: sharedSubjects
+                    });
+                }
+            });
+
+            // Sortowanie malejąco po ilości wspólnych zajęć
+            sharedData.sort((a, b) => b.count - a.count);
+
+            // Aktualizacja interfejsu
+            selectedStudentName.textContent = selectedStudent.name;
+            sharedClassesList.innerHTML = '';
+
+            if (sharedData.length === 0) {
+                sharedClassesList.innerHTML = `<li class="p-6 text-center text-slate-500">Brak osób o wspólnych grupach zajęciowych.</li>`;
+            } else {
+                sharedData.forEach(match => {
+                    const li = document.createElement('li');
+                    li.className = 'p-6 flex flex-col md:flex-row md:items-start justify-between gap-4 hover:bg-slate-50 transition-colors';
+                    
+                    const nameContainer = document.createElement('div');
+                    nameContainer.className = 'flex items-center gap-3';
+                    nameContainer.innerHTML = `
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg shrink-0">
+                            ${match.count}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg text-slate-800">${match.name}</h3>
+                            <p class="text-sm text-slate-500">Ilość wspólnych przedmiotów: <span class="font-medium text-slate-700">${match.count}</span></p>
+                        </div>
+                    `;
+
+                    const subjectsContainer = document.createElement('div');
+                    subjectsContainer.className = 'flex flex-wrap gap-2 md:max-w-md md:justify-end';
+                    
+                    match.subjects.forEach(subj => {
+                        const badge = document.createElement('span');
+                        badge.className = 'px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium border border-slate-200';
+                        badge.textContent = subj;
+                        subjectsContainer.appendChild(badge);
+                    });
+
+                    li.appendChild(nameContainer);
+                    li.appendChild(subjectsContainer);
+                    sharedClassesList.appendChild(li);
+                });
+            }
+
+            resultsContainer.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
