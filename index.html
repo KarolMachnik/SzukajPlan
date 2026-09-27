@@ -47,25 +47,24 @@
                 </div>
                 <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20 text-sm">
                     <p class="font-medium">Wskazówka:</p>
-                    <p class="text-blue-100">Bloki zajęciowe na planie poniżej pasujące do tej osoby zostały oznaczone kolorami i ramką.</p>
+                    <p class="text-blue-100">Bloki zajęciowe pasujące do wybranej osoby zostały oznaczone kolorami i ramką.</p>
                 </div>
             </div>
 
-            <!-- GRAFICZNA WIZUALIZACJA PLANU -->
+            <!-- GRAFICZNA WIZUALIZACJA PLANU (Poniedziałek - Czwartek) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6">
                 <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    Graficzny Plan Tygodnia (Semestr 3)
+                    Graficzny Plan Tygodnia (Semestr 3 - Poniedziałek do Czwartku)
                 </h3>
                 <div class="overflow-x-auto">
-                    <div class="min-w-[900px] grid grid-cols-6 gap-2 text-sm">
-                        <!-- Nagłówki dni -->
+                    <div class="min-w-[800px] grid grid-cols-5 gap-2 text-sm">
+                        <!-- Nagłówki dni (4 dni robocze + godzina) -->
                         <div class="font-bold text-center bg-slate-100 p-3 rounded-lg text-slate-700">Godzina</div>
                         <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Poniedziałek</div>
                         <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Wtorek</div>
                         <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Środa</div>
                         <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Czwartek</div>
-                        <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Piątek</div>
 
                         <!-- Blok 8:00 - 10:00 -->
                         <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">08:00 - 10:00</div>
@@ -82,19 +81,17 @@
                             <div class="text-xs text-slate-500">C3/302</div>
                         </div>
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-center">-</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-center">-</div>
 
                         <!-- Blok 10:00 - 12:00 -->
                         <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">10:00 - 12:00</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-200 text-slate-600 col-span-1 text-center font-medium">Studium Języków Obcych</div>
+                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-200 text-slate-600 text-center font-medium">Studium Języków Obcych</div>
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sieci IP (WL)">
                             <div class="font-bold text-xs text-slate-700">Sieci IP / Podst. Elektr.</div>
                         </div>
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Podstawy elektroniki (WL)">
                             <div class="font-bold text-xs text-slate-700">Podstawy Elektroniki (WL)</div>
                         </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-200 text-slate-600 col-span-1 text-center font-medium">Studium Języków Obcych</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-center">-</div>
+                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-200 text-slate-600 text-center font-medium">Studium Języków Obcych</div>
 
                         <!-- Blok 12:00 - 14:00 -->
                         <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">12:00 - 14:00</div>
@@ -112,9 +109,6 @@
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Bazy danych (P)">
                             <div class="font-bold text-xs text-slate-700">Bazy Danych (P / WL)</div>
                         </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Bazy danych (WL)">
-                            <div class="font-bold text-xs text-slate-700">Bazy Danych / Elektronika</div>
-                        </div>
 
                         <!-- Blok 14:00 - 16:00 -->
                         <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">14:00 - 16:00</div>
@@ -131,9 +125,6 @@
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (WL)">
                             <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (WL)</div>
                         </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (P )">
-                            <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (P)</div>
-                        </div>
 
                         <!-- Blok 16:00 - 18:00 -->
                         <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">16:00 - 18:00</div>
@@ -147,9 +138,6 @@
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (P )">
                             <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (P)</div>
                         </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Metody numeryczne (P)">
-                            <div class="font-bold text-xs text-slate-700">Metody Numeryczne (P)</div>
-                        </div>
 
                         <!-- Blok 18:00 - 20:00 -->
                         <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">18:00 - 20:00</div>
@@ -162,9 +150,6 @@
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-400 text-slate-400 text-center">-</div>
                         <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Metody numeryczne (WL)">
                             <div class="font-bold text-xs text-slate-700">Metody Numeryczne (WL)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (WL)">
-                            <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (WL)</div>
                         </div>
                     </div>
                 </div>
@@ -1392,7 +1377,6 @@
                 if (subjKey && student.groups[subjKey]) {
                     const groupNum = student.groups[subjKey];
                     slot.className = 'schedule-slot p-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-900 shadow-sm';
-                    // Append group badge if not present
                     let badge = slot.querySelector('.group-badge');
                     if (!badge) {
                         badge = document.createElement('div');
