@@ -18,22 +18,35 @@
         <!-- Nagłówek -->
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-slate-900 mb-2">Interaktywny Plan Zajęć & Wspólne Grupy</h1>
-            <p class="text-slate-600">Wyszukaj studenta (lub siebie), aby zobaczyć wspólne zajęcia oraz podświetlony plan w siatce tygodniowej.</p>
+            <p class="text-slate-600">Wybierz połowę semestru, wyszukaj studenta (lub siebie) i zobacz wspólne zajęcia oraz plan.</p>
         </header>
 
-        <!-- Wyszukiwarka z Autocomplete -->
-        <div class="relative max-w-xl mx-auto mb-10" id="searchContainer">
-            <div class="relative">
-                <input type="text" id="searchInput" 
-                    class="w-full p-4 pl-12 pr-4 rounded-xl border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-lg bg-white"
-                    placeholder="Wpisz imię lub nazwisko (np. Karol Machnik)..." autocomplete="off">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
+        <!-- Wybór połowy semestru oraz Wyszukiwarka -->
+        <div class="max-w-xl mx-auto mb-10 space-y-4">
+            <!-- Przełącznik połowy semestru -->
+            <div class="flex bg-slate-200 p-1.5 rounded-xl">
+                <button id="btnHalf1" onclick="setHalf(1)" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white shadow-sm">
+                    1. Połowa semestru
+                </button>
+                <button id="btnHalf2" onclick="setHalf(2)" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all text-slate-600 hover:text-slate-900">
+                    2. Połowa semestru
+                </button>
             </div>
-            <ul id="suggestionsList" class="absolute z-20 w-full bg-white border border-slate-200 rounded-xl mt-2 shadow-xl hidden max-h-72 overflow-y-auto divide-y divide-slate-100"></ul>
+
+            <!-- Wyszukiwarka z Autocomplete -->
+            <div class="relative" id="searchContainer">
+                <div class="relative">
+                    <input type="text" id="searchInput" 
+                        class="w-full p-4 pl-12 pr-4 rounded-xl border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-lg bg-white"
+                        placeholder="Wpisz imię lub nazwisko (np. Karol Machnik)..." autocomplete="off">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <ul id="suggestionsList" class="absolute z-20 w-full bg-white border border-slate-200 rounded-xl mt-2 shadow-xl hidden max-h-72 overflow-y-auto divide-y divide-slate-100"></ul>
+            </div>
         </div>
 
         <!-- Wyniki i Wybrana Osoba -->
@@ -41,13 +54,13 @@
             <!-- Karta wybranej osoby -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <span class="text-xs uppercase tracking-wider bg-blue-500/50 px-2.5 py-1 rounded-md font-semibold">Wybrana osoba</span>
+                    <span class="text-xs uppercase tracking-wider bg-blue-500/50 px-2.5 py-1 rounded-md font-semibold" id="activeHalfBadge">1. Połowa Semestru</span>
                     <h2 class="text-3xl font-bold mt-1" id="selectedStudentName">Imię Nazwisko</h2>
                     <p class="text-blue-100 text-sm mt-1">Nr indeksu: <span id="selectedStudentId" class="font-mono"></span></p>
                 </div>
                 <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20 text-sm">
                     <p class="font-medium">Wskazówka:</p>
-                    <p class="text-blue-100">Bloki zajęciowe pasujące do wybranej osoby zostały oznaczone kolorami i ramką.</p>
+                    <p class="text-blue-100">Bloki zajęciowe pasujące do wybranej osoby zostały podświetlone na niebiesko.</p>
                 </div>
             </div>
 
@@ -55,102 +68,11 @@
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6">
                 <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    Graficzny Plan Tygodnia (Semestr 3 - Poniedziałek do Czwartku)
+                    Graficzny Plan Tygodnia (<span id="scheduleTitleHalf">1. Połowa</span> - Poniedziałek do Czwartku)
                 </h3>
                 <div class="overflow-x-auto">
-                    <div class="min-w-[800px] grid grid-cols-5 gap-2 text-sm">
-                        <!-- Nagłówki dni (4 dni robocze + godzina) -->
-                        <div class="font-bold text-center bg-slate-100 p-3 rounded-lg text-slate-700">Godzina</div>
-                        <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Poniedziałek</div>
-                        <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Wtorek</div>
-                        <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Środa</div>
-                        <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Czwartek</div>
-
-                        <!-- Blok 8:00 - 10:00 -->
-                        <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">08:00 - 10:00</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sieci IP (WL)">
-                            <div class="font-bold text-xs text-slate-700">Sieci IP (W)</div>
-                            <div class="text-xs text-slate-500">D6/201</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sieci IP (WL)">
-                            <div class="font-bold text-xs text-slate-700">Sieci IP (WL)</div>
-                            <div class="text-xs text-slate-500">B9/102</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Bazy danych (WL)">
-                            <div class="font-bold text-xs text-slate-700">Bazy Danych / Sieci IP</div>
-                            <div class="text-xs text-slate-500">C3/302</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-center">-</div>
-
-                        <!-- Blok 10:00 - 12:00 -->
-                        <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">10:00 - 12:00</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-200 text-slate-600 text-center font-medium">Studium Języków Obcych</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sieci IP (WL)">
-                            <div class="font-bold text-xs text-slate-700">Sieci IP / Podst. Elektr.</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Podstawy elektroniki (WL)">
-                            <div class="font-bold text-xs text-slate-700">Podstawy Elektroniki (WL)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-200 text-slate-600 text-center font-medium">Studium Języków Obcych</div>
-
-                        <!-- Blok 12:00 - 14:00 -->
-                        <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">12:00 - 14:00</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Podstawy elektroniki (WL)">
-                            <div class="font-bold text-xs text-slate-700">Podstawy Elektroniki (W)</div>
-                            <div class="text-xs text-slate-500">Kościelik, D6/201</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Bazy danych (WL)">
-                            <div class="font-bold text-xs text-slate-700">Bazy Danych (W)</div>
-                            <div class="text-xs text-slate-500">Kosior</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Podstawy elektroniki (WL)">
-                            <div class="font-bold text-xs text-slate-700">Podstawy Elektroniki (WL)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Bazy danych (P)">
-                            <div class="font-bold text-xs text-slate-700">Bazy Danych (P / WL)</div>
-                        </div>
-
-                        <!-- Blok 14:00 - 16:00 -->
-                        <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">14:00 - 16:00</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sygnały i systemy (WC)">
-                            <div class="font-bold text-xs text-slate-700">Sygnały i Systemy (WC)</div>
-                            <div class="text-xs text-slate-500">Z. Papir</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Metody numeryczne (WL)">
-                            <div class="font-bold text-xs text-slate-700">Metody Numeryczne (W)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sygnały i systemy (WC)">
-                            <div class="font-bold text-xs text-slate-700">Sygnały i Systemy (WC)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (WL)">
-                            <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (WL)</div>
-                        </div>
-
-                        <!-- Blok 16:00 - 18:00 -->
-                        <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">16:00 - 18:00</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (WL)">
-                            <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (W)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sygnały i systemy (WC)">
-                            <div class="font-bold text-xs text-slate-700">Sygnały i Systemy (W)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-200 text-slate-600 text-center font-medium">WF dla 3 grup (SWFiS)</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (P )">
-                            <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (P)</div>
-                        </div>
-
-                        <!-- Blok 18:00 - 20:00 -->
-                        <div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">18:00 - 20:00</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Programowanie obiektowe (P )">
-                            <div class="font-bold text-xs text-slate-700">Programowanie Obiektowe (WL/P)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Sygnały i systemy (WC)">
-                            <div class="font-bold text-xs text-slate-700">Sygnały i Systemy (CWA)</div>
-                        </div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-400 text-slate-400 text-center">-</div>
-                        <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600" data-subject="Metody numeryczne (WL)">
-                            <div class="font-bold text-xs text-slate-700">Metody Numeryczne (WL)</div>
-                        </div>
+                    <div class="min-w-[800px] grid grid-cols-5 gap-2 text-sm" id="timetableGrid">
+                        <!-- Generowane dynamicznie w JS w zależności od wybranej połowy semestru -->
                     </div>
                 </div>
                 <div class="mt-4 flex items-center gap-4 text-xs text-slate-500">
@@ -1325,12 +1247,103 @@
   }
 ];
 
+        let currentHalf = 1;
+        let selectedStudent = null;
+
         const searchInput = document.getElementById('searchInput');
         const suggestionsList = document.getElementById('suggestionsList');
         const resultsContainer = document.getElementById('resultsContainer');
         const selectedStudentName = document.getElementById('selectedStudentName');
         const selectedStudentId = document.getElementById('selectedStudentId');
         const sharedClassesList = document.getElementById('sharedClassesList');
+        const timetableGrid = document.getElementById('timetableGrid');
+        const activeHalfBadge = document.getElementById('activeHalfBadge');
+        const scheduleTitleHalf = document.getElementById('scheduleTitleHalf');
+
+        function setHalf(half) {
+            currentHalf = half;
+            document.getElementById('btnHalf1').className = half === 1 
+                ? 'flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white shadow-sm' 
+                : 'flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all text-slate-600 hover:text-slate-900';
+            document.getElementById('btnHalf2').className = half === 2 
+                ? 'flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white shadow-sm' 
+                : 'flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all text-slate-600 hover:text-slate-900';
+            
+            activeHalfBadge.textContent = `${half}. Połowa Semestru`;
+            scheduleTitleHalf.textContent = `${half}. Połowa`;
+
+            renderTimetableStructure();
+            if (selectedStudent) {
+                highlightStudentSchedule(selectedStudent);
+            }
+        }
+
+        function renderTimetableStructure() {
+            // Definicje bloków dla połowy 1 i 2
+            // W 2 połowie PO P jest w poniedziałek 12:00, Metody numeryczne P w poniedziałek 17:00, itp.
+            const slotsHalf1 = [
+                // 8:00 - 10:00
+                { time: "08:00 - 10:00", mon: {title: "Sieci IP (W)", sub: "D6/201", key: "Sieci IP (WL)"}, tue: {title: "Sieci IP (WL)", sub: "B9/102", key: "Sieci IP (WL)"}, wed: {title: "Bazy Danych / Sieci IP", sub: "C3/302", key: "Bazy danych (WL)"}, thu: {title: "-", sub: "", key: null} },
+                // 10:00 - 12:00
+                { time: "10:00 - 12:00", mon: {title: "Studium Języków Obcych", sub: "", key: null}, tue: {title: "Sieci IP / Podst. Elektr.", sub: "", key: "Sieci IP (WL)"}, wed: {title: "Podstawy Elektroniki (WL)", sub: "", key: "Podstawy elektroniki (WL)"}, thu: {title: "Studium Języków Obcych", sub: "", key: null} },
+                // 12:00 - 14:00
+                { time: "12:00 - 14:00", mon: {title: "Podstawy Elektroniki (W)", sub: "Kościelik, D6/201", key: "Podstawy elektroniki (WL)"}, tue: {title: "Bazy Danych (W)", sub: "Kosior", key: "Bazy danych (WL)"}, wed: {title: "Podstawy Elektroniki (WL)", sub: "", key: "Podstawy elektroniki (WL)"}, thu: {title: "Bazy Danych (P / WL)", sub: "", key: "Bazy danych (P)"} },
+                // 14:00 - 16:00
+                { time: "14:00 - 16:00", mon: {title: "Sygnały i Systemy (WC)", sub: "Z. Papir", key: "Sygnały i systemy (WC)"}, tue: {title: "Metody Numeryczne (W)", sub: "", key: "Metody numeryczne (WL)"}, wed: {title: "Sygnały i Systemy (WC)", sub: "", key: "Sygnały i systemy (WC)"}, thu: {title: "Programowanie Obiektowe (WL)", sub: "", key: "Programowanie obiektowe (WL)"} },
+                // 16:00 - 18:00
+                { time: "16:00 - 18:00", mon: {title: "Programowanie Obiektowe (W)", sub: "", key: "Programowanie obiektowe (WL)"}, tue: {title: "Sygnały i Systemy (W)", sub: "", key: "Sygnały i systemy (WC)"}, wed: {title: "WF dla 3 grup (SWFiS)", sub: "", key: null}, thu: {title: "Programowanie Obiektowe (P)", sub: "", key: "Programowanie obiektowe (P )"} },
+                // 18:00 - 20:00
+                { time: "18:00 - 20:00", mon: {title: "Programowanie Obiektowe (WL/P)", sub: "", key: "Programowanie obiektowe (P )"}, tue: {title: "Sygnały i Systemy (CWA)", sub: "", key: "Sygnały i systemy (WC)"}, wed: {title: "-", sub: "", key: null}, thu: {title: "Metody Numeryczne (WL)", sub: "", key: "Metody numeryczne (WL)"} }
+            ];
+
+            const slotsHalf2 = [
+                // 8:00 - 10:00
+                { time: "08:00 - 10:00", mon: {title: "Sieci IP (W)", sub: "D6/201", key: "Sieci IP (WL)"}, tue: {title: "Sieci IP (WL)", sub: "B9/102", key: "Sieci IP (WL)"}, wed: {title: "Bazy Danych / Sieci IP", sub: "C3/302", key: "Bazy danych (WL)"}, thu: {title: "-", sub: "", key: null} },
+                // 10:00 - 12:00
+                { time: "10:00 - 12:00", mon: {title: "Studium Języków Obcych", sub: "", key: null}, tue: {title: "Sieci IP / Podst. Elektr.", sub: "", key: "Sieci IP (WL)"}, wed: {title: "Podstawy Elektroniki (WL)", sub: "", key: "Podstawy elektroniki (WL)"}, thu: {title: "Studium Języków Obcych", sub: "", key: null} },
+                // 12:00 - 14:00
+                { time: "12:00 - 14:00", mon: {title: "Programowanie Obiektowe (P)", sub: "N. Rápacz", key: "Programowanie obiektowe (P )"}, tue: {title: "Bazy Danych (W)", sub: "Kosior", key: "Bazy danych (WL)"}, wed: {title: "Podstawy Elektroniki (WL)", sub: "", key: "Podstawy elektroniki (WL)"}, thu: {title: "Bazy Danych (P / WL)", sub: "", key: "Bazy danych (P)"} },
+                // 14:00 - 16:00
+                { time: "14:00 - 16:00", mon: {title: "Sygnały i Systemy / PO (P)", sub: "", key: "Sygnały i systemy (WC)"}, tue: {title: "Metody Numeryczne (W)", sub: "", key: "Metody numeryczne (WL)"}, wed: {title: "Sygnały i Systemy (WC)", sub: "", key: "Sygnały i systemy (WC)"}, thu: {title: "Programowanie Obiektowe (WL)", sub: "", key: "Programowanie obiektowe (WL)"} },
+                // 16:00 - 18:00
+                { time: "16:00 - 18:00", mon: {title: "Programowanie Obiektowe (P)", sub: "", key: "Programowanie obiektowe (P )"}, tue: {title: "Sygnały i Systemy (W)", sub: "", key: "Sygnały i systemy (WC)"}, wed: {title: "WF dla 3 grup (SWFiS)", sub: "", key: null}, thu: {title: "Programowanie Obiektowe (P)", sub: "", key: "Programowanie obiektowe (P )"} },
+                // 18:00 - 20:00
+                { time: "18:00 - 20:00", mon: {title: "Programowanie Obiektowe (WL)", sub: "", key: "Programowanie obiektowe (WL)"}, tue: {title: "Metody Numeryczne (P)", sub: "", key: "Metody numeryczne (P)"}, wed: {title: "-", sub: "", key: null}, thu: {title: "Metody Numeryczne (WL)", sub: "", key: "Metody numeryczne (WL)"} }
+            ];
+
+            const currentSlots = currentHalf === 1 ? slotsHalf1 : slotsHalf2;
+
+            let html = `
+                <div class="font-bold text-center bg-slate-100 p-3 rounded-lg text-slate-700">Godzina</div>
+                <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Poniedziałek</div>
+                <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Wtorek</div>
+                <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Środa</div>
+                <div class="font-bold text-center bg-blue-50 p-3 rounded-lg text-blue-800">Czwartek</div>
+            `;
+
+            currentSlots.forEach(row => {
+                html += `<div class="bg-slate-50 p-2 rounded-lg text-center font-semibold text-slate-500 flex items-center justify-center">${row.time}</div>`;
+                ['mon', 'tue', 'wed', 'thu'].forEach(day => {
+                    const item = row[day];
+                    if (item.key) {
+                        html += `
+                            <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition-all" data-subject="${item.key}">
+                                <div class="font-bold text-xs text-slate-700">${item.title}</div>
+                                ${item.sub ? `<div class="text-xs text-slate-500">${item.sub}</div>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 text-center flex items-center justify-center font-medium">
+                                ${item.title}
+                            </div>
+                        `;
+                    }
+                });
+            });
+
+            timetableGrid.innerHTML = html;
+        }
 
         // Autocomplete
         searchInput.addEventListener('input', function() {
@@ -1367,28 +1380,11 @@
         });
 
         function selectStudent(student) {
+            selectedStudent = student;
             selectedStudentName.textContent = student.name;
             selectedStudentId.textContent = student.id;
 
-            // Highlight timetable slots
-            document.querySelectorAll('.schedule-slot').forEach(slot => {
-                slot.className = 'schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600';
-                const subjKey = slot.getAttribute('data-subject');
-                if (subjKey && student.groups[subjKey]) {
-                    const groupNum = student.groups[subjKey];
-                    slot.className = 'schedule-slot p-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-900 shadow-sm';
-                    let badge = slot.querySelector('.group-badge');
-                    if (!badge) {
-                        badge = document.createElement('div');
-                        badge.className = 'group-badge mt-1 text-xs font-bold text-blue-600 bg-white px-2 py-0.5 rounded inline-block shadow-xs';
-                        slot.appendChild(badge);
-                    }
-                    badge.textContent = `Gr. ${groupNum}`;
-                } else {
-                    const badge = slot.querySelector('.group-badge');
-                    if (badge) badge.remove();
-                }
-            });
+            highlightStudentSchedule(student);
 
             // Calculate shared classes with others
             let sharedData = [];
@@ -1432,6 +1428,30 @@
 
             resultsContainer.classList.remove('hidden');
         }
+
+        function highlightStudentSchedule(student) {
+            document.querySelectorAll('.schedule-slot').forEach(slot => {
+                const subjKey = slot.getAttribute('data-subject');
+                if (subjKey && student.groups[subjKey]) {
+                    const groupNum = student.groups[subjKey];
+                    slot.className = 'schedule-slot p-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-900 shadow-sm transition-all';
+                    let badge = slot.querySelector('.group-badge');
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'group-badge mt-1 text-xs font-bold text-blue-600 bg-white px-2 py-0.5 rounded inline-block shadow-xs';
+                        slot.appendChild(badge);
+                    }
+                    badge.textContent = `Gr. ${groupNum}`;
+                } else if (subjKey) {
+                    slot.className = 'schedule-slot p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition-all';
+                    const badge = slot.querySelector('.group-badge');
+                    if (badge) badge.remove();
+                }
+            });
+        }
+
+        // Inicjalizacja struktury na starcie
+        renderTimetableStructure();
     </script>
 </body>
 </html>
