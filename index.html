@@ -1432,13 +1432,6 @@
 
             resultsContainer.classList.remove('hidden');
         }
-
-        // Domyślnie załaduj Karola Machnika przy starcie
-        const defaultStudent = studentsData.find(s => s.name.includes("Karol Machnik"));
-        if (defaultStudent) {
-            searchInput.value = defaultStudent.name;
-            selectStudent(defaultStudent);
-        }
     </script>
 </body>
 </html>
